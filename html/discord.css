@@ -30,7 +30,7 @@ input, textarea {
 }
 
 .guilds-wrapper {
-    background-color: red;
+    /* background-color: red; */
     float: left;
     display: flex;
     flex-direction: column;
@@ -82,11 +82,12 @@ input, textarea {
 .channel-scroller.guild {
     float: top;
     height: 8%; width: 240px;
+    box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 2px 0 rgba(0,0,0,.06);
+    position: relative;
     user-select: none;
     cursor:pointer;
-    align-items: center;
-    color: #fff;
     display: flex;
+    align-items: center;
     font-family: Whitney,Helvetica Neue,Helvetica,Arial,sans-serif;
     font-weight: 500;
     padding: 0 12px 0 16px;
@@ -140,29 +141,36 @@ input, textarea {
 }
 
 .channel-container {
-    background-color: aquamarine;
+    background-color: #36393e;
     height:100%; width:100%;
+    width: calc(100% - 310px);
+    display: flex;
+    flex-direction: column;
 }
 
 .channel-container.titlebar {
-    background-color: pink;
+    box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 2px 0 rgba(0,0,0,.06);
+    position: relative;
     user-select: none;
-    height: 8%;
+    width: 100%;
+    height: 9.4%;
 }
 
 .channel-container.messages {
-    background-color: red;
-    height: 61%; width: 25%;
-    float:top;
+    height: 100%; width: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
     -webkit-user-select: all;
-    user-select: all;
+    user-select: text;
+}
+
+.message {
+    background-color: blue;
 }
 
 .channel-container.textarea {
-    background-color: orange;
     bottom:0px;
     float:bottom;
     height:50px;
+    width: 100%;
 }
