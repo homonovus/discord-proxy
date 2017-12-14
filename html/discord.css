@@ -30,7 +30,6 @@ input, textarea {
 }
 
 .guilds-wrapper {
-    /* background-color: red; */
     float: left;
     display: flex;
     flex-direction: column;
@@ -58,7 +57,6 @@ input, textarea {
 .guild-inner {
     height: 50px; width: 50px;
     cursor: pointer;
-    /* background-color:blue; */
 }
 
 .avatar-small {
@@ -102,6 +100,23 @@ input, textarea {
     float:top;
     height: 83%;
     top: 48px;
+}
+
+.channels .channel {
+    cursor: pointer;
+    padding: 10px 25px;
+}
+
+.channel.text {
+    background-color: blue;
+}
+
+.channel.seperator {
+    background-color: green;
+}
+
+.channel.voice {
+    background-color: red;
 }
 
 .channel-scroller.settings {
@@ -152,8 +167,12 @@ input, textarea {
     box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 2px 0 rgba(0,0,0,.06);
     position: relative;
     user-select: none;
-    width: 100%;
-    height: 9.4%;
+    width: calc(100% - 28px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 9.1%;
+    padding: 0 12px 0 16px;
 }
 
 .channel-container.messages {

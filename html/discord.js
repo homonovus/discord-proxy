@@ -33,7 +33,8 @@ class User {
 }
 
 class GuildMember {
-    constructor(guild = new Guild, id) {
+    constructor(guild, id) {
+        this.guild = guild
         http.request(`discord-api/guilds/${guild.id}/members/${id}`,{method:"GET",headers:{authorization:discord.client.token}}).then(r=>{
             for (let x in r)
                 this[x] = r[x]
@@ -42,26 +43,24 @@ class GuildMember {
 }
 
 class Client {
-    constructor(token = new String) {
+    constructor(token) {
         http.request("discord-api/users/@me",{method:"GET",headers:{authorization:token}}).then(r=>{
             for (let x in r)
                 this[x] = r[x]
-        }).catch(r=>{
-            new Error("invalid token")
         })
         this.token = token
     }
 }
 
 class Channel {
-    constructor(guild = new Guild, id) {
+    constructor(guild, id) {
+        this.guild = guild
         http.request(`discord-api/channels/${id}`,{method:"GET",headers:{authorization:discord.client.token}}).then(r=>{
             for (let x in r)
                 this[x] = r[x]
         })
-        this.guild = guild
         this.guild_id = undefined
-        // this.guild.channels.set(this.id,this)
+        // guild.channels.set(this.id,this)
     }
 
     createMessage(msg) {
@@ -100,32 +99,76 @@ class Guild {
     }
 }
 
-let ddone = new Event("discordDone")
+class Message {
+    constructor(channel,id) {
+        this.channel = channel
+        this.id = id
+        this.content = "sick me me dude"
+        /* http.request(`discord-api/channels/${channel.id}/messages/${id}`,{method:"GET",headers:{authorization:discord.client.token}}).then(r=>{
+            for (let x in r)
+                this[x] = r[x]
+            window.dispatchEvent(new CustomEvent("discordMessage"))
+        }) */
+        window.dispatchEvent(new CustomEvent("discordMessage",{detail:this}))
+    }
+}
 
-window.addEventListener("discordDone",()=>{
-    /* <div class="guild">
-        <div draggable="true">
-            <div class="guild-inner" draggable="false">
-                <a class="avatar-small" draggable="false" class="avatar-small" style="background-image: url('https://cdn.discordapp.com/icons/295341979800436736/f48dfb6e89ba99f26b476ebd03e09029.webp');"></a>
-            </div>
-        </div>
-    </div> */
+let gupdate = new CustomEvent("discordGuildUpdate")
+let cupdate = new CustomEvent("discordChannelUpdate")
+
+window.addEventListener("discordDone",e=>{
     console.log("discord done load")
-    /* console.log("populating guild scroller")
-    discord.client.guilds.forEach(g=>{
+    console.log("populating guild scroller")
+    // discord.client.guilds.forEach(g=>{
         $(`<div class="guild">
-        <div draggable="true">
-            <div class="guild-inner" draggable="false">
-                <a class="avatar-small" draggable="false" class="avatar-small" style="background-image: url('https://pbs.twimg.com/profile_images/839721704163155970/LI_TRk1z_400x400.jpg');"></a>
+            <div draggable="true">
+                <div class="guild-inner" draggable="false">
+                    <a class="avatar-small" draggable="false" class="avatar-small" style="background-image: url('https://pbs.twimg.com/profile_images/839721704163155970/LI_TRk1z_400x400.jpg');"></a>
+                </div>
             </div>
-        </div>
-    </div>`).appendTo(".guilds-scroller").click((ev)=>{
-	selectedGuild = "google"
-	$(".channel-scroller.guild").text(selectedGuild)
-}).bind("drag",(ev)=>{
-	console.log("dragging")
+        </div>`).appendTo(".guilds-scroller").click((ev)=>{
+            discord.selectedGuild = {name:"google"}
+            window.dispatchEvent(gupdate)
+            $(".channel-scroller.guild").text(discord.selectedGuild.name)
+        }).bind("drag",(ev)=>{
+            console.log("dragging")
+        })
+    // })
 })
-    }) */
+
+window.addEventListener("discordGuildUpdate",e=>{
+    console.log("guild update, update curguild + channels")
+    $(".channel-scroller.channels").empty()
+    $(".channel-container.messages").empty()
+    window.dispatchEvent(cupdate)
+    /* if (discord.selectedGuild.channels.size == 0){
+        let g = discord.selectedGuild
+        http.request(`discord-api/guilds/${discord.selectedGuild.id}/channels`,{method:"GET",headers:{authorization:discord.client.token}}).then(r=>{
+            for (let x in r) {
+                let c = new Channel(g,r[x].id)
+                g.channels.set(r[x].id,c)
+            }
+        })
+    } */
+})
+
+window.addEventListener("discordMessage",e=>{
+    console.log("new curchannel message",e.detail)
+    let msg = e.detail
+    //msg.channel.messages.set(msg.id,msg)
+    $(".channel-container.messages").append(`<div class="message">${msg.content}</div>`)
+    // discord.selectedChannel
+})
+
+window.addEventListener("discordChannelUpdate",e=>{
+    console.log("channel event, update")
+    //discord.selectedGuild.channels.forEach(c=>{
+        $(`<div class="channel text">aaaa</div>`).appendTo(".channel-scroller.channels").click(ev=>{
+            console.log("channel click")
+            discord.selectedChannel = {name:"aaaa"}
+            $(".channel-container.titlebar").text(discord.selectedChannel.name)
+        })
+    //})
 })
 
 /* 
@@ -140,11 +183,11 @@ window.addEventListener("discordDone",()=>{
             </div>
         </div>
     </div>`).appendTo(".guilds-scroller").click((ev)=>{
-	selectedGuild = "google"
-	$(".channel-scroller.guild").text(selectedGuild)
-}).bind("drag",(ev)=>{
-	console.log("dragging")
-})
+        selectedGuild = "google"
+        $(".channel-scroller.guild").text(selectedGuild)
+    }).bind("drag",(ev)=>{
+        console.log("dragging")
+    })
 
     NEW CHANNEL :: WIP
     $(".channel-scroller.channels").append(`<div class="message">asdf</div>`)
@@ -155,12 +198,13 @@ window.addEventListener("discordDone",()=>{
     $(".channel-scroller.settings .discriminator").text("#"+discord.client.discriminator)
 */
 
-window.addEventListener("load",function(w,ev) {
-    let token = prompt("token","mfa...")
+window.addEventListener("load",(w,e)=>{
+    window.dispatchEvent(new CustomEvent("discordDone"))
+    /* let token = prompt("token","mfa...")
     if (!token || token == "mfa..." || token.trim() == "") {
         throw new Error("no token")
         return;
-    }
+    } */
 
     window.discord = {}
     /* discord.client = new Client(token) */
