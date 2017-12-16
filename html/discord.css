@@ -78,7 +78,6 @@ input, textarea {
 }
 
 .channel-scroller.guild {
-    float: top;
     height: 8%; width: 240px;
     box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 2px 0 rgba(0,0,0,.06);
     position: relative;
@@ -93,11 +92,11 @@ input, textarea {
 }
 
 .channel-scroller.channels {
+    display: flex;
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: scroll;
     user-select: none;
-    float:top;
     height: 83%;
     top: 48px;
 }
@@ -126,7 +125,6 @@ input, textarea {
     font-size: 14px;
     height: 9%;
     bottom: 0px;
-    float:top;
     overflow: hidden;
 }
 
