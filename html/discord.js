@@ -155,12 +155,13 @@ window.addEventListener("discordDone",e=>{
             </div>`).appendTo(".guilds-scroller").click((ev)=>{
                 discord.selectedGuild = g
                 window.dispatchEvent(new CustomEvent("discordGuildUpdate"))
+                $(".channel-container.titlebar").empty()
                 $(".channel-scroller.guild").text(g.name)
             }).bind("drag",(ev)=>{
                 console.log("dragging")
             })
         })
-    }, 1000)
+    }, 2000)
 })
 
 window.addEventListener("discordGuildUpdate",e=>{
@@ -181,14 +182,21 @@ window.addEventListener("discordGuildUpdate",e=>{
                 }
             })
         }
-    }, 1000);
+    }, 1500);
 })
 
 window.addEventListener("discordChannelUpdate",e=>{
     console.log("channel update, populate messages")
+
+    let chantypes = {
+        0: "text",
+        2: "voice",
+        4: "category"
+    }
+
     discord.selectedGuild.channels.forEach(c=>{
-        if (c.name == undefined || !c.name) return // fuck categories for now lol
-        $(`<div class="channel text" style="order:${c.position}">${(c.type == 4 ? "+=" : "") + c.name}</div>`).appendTo(".channel-scroller.channels").click(ev=>{
+        if (c.name == undefined || !c.name) return // ungotten channel
+        $(`<div class="channel ${chantypes[c.type]}" style="order:${c.position}">${c.name}</div>`).appendTo(".channel-scroller.channels").click(ev=>{
             console.log("channel click",c.name,c.id)
             discord.selectedChannel = c
             $(".channel-container.titlebar").text(c.name)

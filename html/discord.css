@@ -110,7 +110,8 @@ input, textarea {
     background-color: blue;
 }
 
-.channel.seperator {
+.channel.category {
+    padding: 10px 5px;
     background-color: green;
 }
 
