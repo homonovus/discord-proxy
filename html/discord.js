@@ -1,14 +1,17 @@
+// TODO: get some kinda modal thing in here
+// fuck alert
+
 var http = {
     request: function(url, options) {
         return new Promise((res,rej)=>{
             let req = new XMLHttpRequest()
             let data = options.body || options.data
-            let body = ""; let i = 0
+            let params = ""; let i = 0
 
-            for (let x in options.body) {
+            for (let x in data) {
                 if (i!=0)
-                    body+="&"
-                body+=`${x}=${options.body[x]}`
+                    params+="&"
+                params+=`${x}=${data[x]}`
                 i++
             }
 
@@ -26,7 +29,7 @@ var http = {
                 req.setRequestHeader(x,options.headers[x])
             }
 
-            req.send(body)
+            req.send(params)
         })
     }
 }
@@ -69,31 +72,27 @@ class Channel {
                 this[x] = r[x]
             }
         })
+        this.messages = new Map()
     }
 
     createMessage(msg) {
-        if (typeof msg == "string")
-            return http.request(`discord-api/channels/${this.id}/messages`,{
-                method:"POST",
-                body:{content:msg},
-                headers:{
-                    authorization:discord.client.token,
-                    "Content-Type":"application/x-www-form-urlencoded"
-                }
-            })
-        else if (typeof msg == "object")
-            return http.request(`discord-api/channels/messages`,{
-                method:"POST",
-                body:msg,
-                headers:{
-                    authorization:discord.client.token,
-                    "Content-Type":"application/x-www-form-urlencoded"
-                }
-            })
+        return http.request(`discord-api/channels/${this.id}/messasges`,{
+            method:"POST",
+            body:(typeof msg == "string" ? {content:msg} : msg),
+            headers:{
+                authorization:discord.client.token,
+                "Content-Type":"application/json"
+            }
+        })
     }
 
     deleteMessage(id) {
-        return http.request(`discord-api/channels/${this.id}/messages/${id}`,{method:"DELETE",headers:{authorization:discord.client.token}})
+        return http.request(`discord-api/channels/${this.id}/messages/${id}`,{
+            method:"DELETE",
+            headers:{
+                authorization:discord.client.token
+            }
+        })
     }
 }
 
@@ -125,20 +124,15 @@ class Guild {
 }
 
 class Message {
-    constructor(channel,id) {
+    constructor(channel,obj) {
         this.channel = channel
-        this.id = id
-        this.content = "sick me me dude"
-        /* http.request(`discord-api/channels/${channel.id}/messages/${id}`,{method:"GET",headers:{authorization:discord.client.token}}).then(r=>{
-            for (let x in r)
-                this[x] = r[x]
-            window.dispatchEvent(new CustomEvent("discordMessage"))
-        }) */
+        for (let x in obj)
+            this[x] = obj[x]
     }
 }
 
 window.addEventListener("discordDone",e=>{
-    console.log("discord done, populate guild scroller")
+    console.log("discord done, populating guild scroller")
 
     // client info
     $(".channel-scroller.settings .avatar-small")[0].style.backgroundImage = `url("https://cdn.discordapp.com/avatars/${discord.client.id}/${discord.client.avatar}.webp")`
@@ -165,7 +159,7 @@ window.addEventListener("discordDone",e=>{
 })
 
 window.addEventListener("discordGuildUpdate",e=>{
-    console.log("guild update, populate channel scroller")
+    console.log("curguild set, getting channels")
     setTimeout(() => {
         $(".channel-scroller.channels").empty()
         $(".channel-container.messages").empty()
@@ -182,34 +176,63 @@ window.addEventListener("discordGuildUpdate",e=>{
                 }
             })
         }
-    }, 1500);
+    }, 4000);
 })
 
 window.addEventListener("discordChannelUpdate",e=>{
-    console.log("channel update, populate messages")
+    console.log("populating channel scroller")
 
     let chantypes = {
         0: "text",
+        1: "dm",
         2: "voice",
+        3: "group",
         4: "category"
     }
 
     discord.selectedGuild.channels.forEach(c=>{
         if (c.name == undefined || !c.name) return // ungotten channel
-        $(`<div class="channel ${chantypes[c.type]}" style="order:${c.position}">${c.name}</div>`).appendTo(".channel-scroller.channels").click(ev=>{
-            console.log("channel click",c.name,c.id)
-            discord.selectedChannel = c
-            $(".channel-container.titlebar").text(c.name)
+        $(`<div class="channel ${chantypes[c.type]}" ${c.type==4?`id=${c.id}`:''} style="order:${c.position}">${c.name}</div>`).appendTo(".channel-scroller.channels").click(ev=>{
+            if (c.type == 0) {
+                console.log("channel click",c.name,c.id)
+                discord.selectedChannel = c
+                $(".channel-container.titlebar").text(c.name)
+                $(".channel-container.messages").empty()
+
+                console.log("populating messages, if any")
+                c.messages.forEach(m=>{
+                    $(".channel-container.messages").append(`<div class="message">${m.content}</div>`)
+                })
+
+                clearInterval(getmsg)
+                var getmsg = setInterval(()=>{
+                    console.log(`get messages for ${c.name} ${c.id}`)
+                    http.request(`discord-api/channels/${c.id}/messages`,{method:"GET",headers:{authorization:discord.client.token}}).then(r=>{
+                    for (let x in r) {
+                        let m = new Message(c,r[x])
+                        window.dispatchEvent(new CustomEvent("discordMessage",{detail:m}))
+                    }
+                })
+                },5000)
+            } else if (c.type == 2) {
+                console.log("voice channel click",c.name,c.id)
+                // tell client no voice service is provided
+                // maybe later, idk
+            } else if (c.type == 4) {
+                console.log("category click",c.name,c.id)
+                // open category
+                // populate category with channels
+            }
         })
     })
 })
 
+let received = []
 window.addEventListener("discordMessage",e=>{
-    console.log("new message", e.detail)
     let msg = e.detail
-    // msg.channel.messages.set(msg.id,msg)
-    $(".channel-container.messages").append(`<div class="message">${msg.content}</div>`)
-    // discord.selectedChannel
+    if (!discord.selectedChannel.messages.get(msg.id))
+        $(".channel-container.messages").prepend(`<div class="message">${msg.content}</div>`)
+    discord.selectedChannel.messages.set(msg.id,msg)
 })
 
 /* 
@@ -248,8 +271,6 @@ window.addEventListener("load",(w,e)=>{
 
     window.discord = {}
     discord.client = new Client(token)
-
-    /* window.dispatchEvent(new CustomEvent("discordDone")) */
 
     http.request("discord-api/users/@me/guilds",{method:"GET",headers:{authorization:token}}).then(r=>{
         discord.client.guilds = new Map()

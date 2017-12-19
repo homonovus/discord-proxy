@@ -51,7 +51,7 @@ input, textarea {
 
 .guilds-scroller .guild {
     height: 50px; width: 50px;
-    padding-top: 2px; padding-bottom: 2px;
+    margin-top: 8px;
 }
 
 .guild-inner {
@@ -110,14 +110,23 @@ input, textarea {
     background-color: blue;
 }
 
-.channel.category {
-    padding: 10px 5px;
-    background-color: green;
+.channel.dm {
+    background-color: orange;
 }
 
 .channel.voice {
     background-color: red;
 }
+
+.channel.group {
+    background-color: pink;
+}
+
+.channel.category {
+    padding: 10px 5px;
+    background-color: green;
+}
+
 
 .channel-scroller.settings {
     display:flex;
